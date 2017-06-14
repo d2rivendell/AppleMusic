@@ -12,11 +12,7 @@
 #import "MainCell.h"
 #import "UITableView+help.h"
 
-//手势下滑最大允许位移
-static CGFloat gestureOffset = 200;
-//对应view可允许的最大偏移距离
-static CGFloat dismissOffset = 80;
-#define W M_PI/(gestureOffset * 2)
+
 @interface MusicPlayerViewController ()<UITableViewDelegate,UITableViewDataSource>
 //view的y偏移值
 @property (assign, nonatomic) CGFloat dampOffset;
@@ -45,19 +41,21 @@ static CGFloat dismissOffset = 80;
         self.dampOffset = 0;
     }else if(pan.state == UIGestureRecognizerStateChanged){
         
-        if(point.y < gestureOffset && point.y > 0){
+        if(point.y <= gestureOffset && point.y > 0){
             self.dampOffset = sin(W * point.y ) * dismissOffset;//简陋的阻尼效果😊
             self.view.transform = CGAffineTransformMakeTranslation(0, self.dampOffset);
-        }else{
-            [self dismissViewControllerAnimated:YES completion:nil];
         }
     }else if(pan.state == UIGestureRecognizerStateEnded){
         //恢复
         [UIView animateWithDuration: 0.3 delay:0 usingSpringWithDamping:0.93 initialSpringVelocity:0.3 options:UIViewAnimationOptionCurveEaseOut animations:^{
             self.view.transform = CGAffineTransformIdentity;
         } completion:^(BOOL finished) {
-           
+            self.dampOffset = 0;
         }];
+    }
+    NSLog(@"%f   %f",point.y,self.dampOffset);
+    if(self.dampOffset >= (dismissOffset - 1 )){
+            [self dismissViewControllerAnimated:YES completion:nil];
     }
     
 }
@@ -75,7 +73,13 @@ static CGFloat dismissOffset = 80;
             scrollView.contentOffset = CGPointZero;
         }
     }else{//向上滑动
-        self.stopPanGesture = YES;
+        //view正在阻尼运动scollView仍无法响应滑动事件
+        if(self.dampOffset){
+         scrollView.contentOffset = CGPointZero;
+        }else{
+        //view在初始位置
+         self.stopPanGesture = YES;
+        }
     }
     if(scrollView.decelerating){
      // 正在减速

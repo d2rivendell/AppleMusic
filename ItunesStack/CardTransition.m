@@ -50,7 +50,7 @@
     UIView *containerView =  [transitionContext containerView];
     CGFloat HEIGHT = [[UIScreen mainScreen] bounds].size.height;
     CGFloat  WIDTH = [[UIScreen mainScreen] bounds].size.width;
-    CGFloat scale  = 1 - (40/HEIGHT);
+    CGFloat scale  = (HEIGHT - PaddingToTop * 2)/HEIGHT;
     if( _presented){
         CustomTabBarController *fromVC = (CustomTabBarController *)[transitionContext viewControllerForKey:UITransitionContextFromViewControllerKey];
         MusicPlayerViewController *toVc = (MusicPlayerViewController *)[transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
@@ -78,8 +78,9 @@
         cell.avatar.image = avatar.image;
         cell.avatar.hidden = YES;
 
-        
+        //tabbar在动画的过程中是在toView的上层，也需要做个替身
         self.tabBarView = [[UIImageView alloc] initWithImage:[self copyView:self.tabBar]];
+        
         CGFloat tabBarW = self.tabBarView.image.size.width;
         CGFloat tabBarH = self.tabBarView.image.size.height;
         self.tabBarView.frame = CGRectMake(0, HEIGHT - tabBarH, tabBarW, tabBarH);
@@ -96,7 +97,7 @@
             effectView.frame = effectViewEndFrame;
             avatar.frame = avatarEndFrame;
             fromVC.view.transform = CGAffineTransformMakeScale(scale, scale);
-            toVc.view.frame = CGRectMake(0, 40, finalFrameForVc.size.width, finalFrameForVc.size.height - 40);
+            toVc.view.frame = CGRectMake(0, PaddingToTop * 2, finalFrameForVc.size.width, finalFrameForVc.size.height - 40);
             self.tabBarView.transform = CGAffineTransformMakeTranslation(0, tabBarH);
             [self clickCornerWidth:fromVC.view];
              [self clickCornerWidth:toVc.view];
@@ -113,8 +114,7 @@
          MainCell *cell =  [fromVc.tableView cellForRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0]];
         cell.avatar.hidden = YES;
          CustomTabBarController * toVc = (CustomTabBarController *)[transitionContext viewControllerForKey:UITransitionContextToViewControllerKey];
-        toVc.musicToolBar.avatar.hidden = YES;
-        toVc.musicToolBar.hidden = NO;
+     
         //头像
         UIImageView *avatar = [[UIImageView alloc] init];
         avatar.image = cell.avatar.image;
@@ -122,8 +122,7 @@
         avatar.contentMode = UIViewContentModeScaleAspectFit;
         avatar.clipsToBounds = YES;
       
-        //快捷播放条
-        toVc.musicToolBar.hidden = YES;
+    
         CGRect fromVcOriginFrame = [fromVc.view convertRect:fromVc.view.bounds toView:[UIApplication sharedApplication].keyWindow];
         
         // animate fakeBar
@@ -172,16 +171,16 @@
     return newImage;
     
 }
+
+
 - (void)clickCornerWidth:(UIView *)view{
    CGSize screenSize =   [UIScreen mainScreen].bounds.size;
-
+    //顶部圆角
    UIBezierPath *path = [UIBezierPath bezierPathWithRoundedRect:CGRectMake(0, 0, screenSize.width, screenSize.height * 3) byRoundingCorners:UIRectCornerTopLeft|UIRectCornerTopRight cornerRadii:CGSizeMake(8, 8)];
     CAShapeLayer *sharpLayer = [CAShapeLayer layer];
     sharpLayer.path = path.CGPath;
     view.layer.mask = sharpLayer;
 }
-- (CGRect)recover:(CGRect)frame scale:(CGFloat )scale{
-    return CGRectMake(frame.origin.x * scale, frame.origin.y * scale, frame.size.width * scale, frame.size.height * scale);
-}
+
 
 @end
